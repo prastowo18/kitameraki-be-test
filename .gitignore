@@ -51,6 +51,7 @@ typings/
 
 # Optional REPL history
 .node_repl_history
+yarn.lock
 
 # Output of 'npm pack'
 *.tgz

@@ -7,17 +7,26 @@
     "watch": "tsc -w",
     "clean": "rimraf dist",
     "prestart": "npm run clean && npm run build",
-    "start": "func start",
-    "test": "echo \"No tests yet...\""
+    "start": "func start --watch",
+    "test": "echo \"No tests yet...\"",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "init-db": "ts-node ./scripts/initDb.ts",
+    "reset-db": "docker-compose down -v && yarn run init-db"
   },
   "dependencies": {
     "@azure/cosmos": "^4.0.0",
-    "@azure/functions": "^4.0.0"
+    "@azure/functions": "^4.0.0",
+    "azure-functions-core-tools": "4",
+    "dotenv": "^17.2.1",
+    "uuid": "^11.1.0",
+    "zod": "^4.0.17"
   },
   "devDependencies": {
-    "@types/node": "^20.x",
+    "@types/node": "^24.3.0",
     "rimraf": "^5.0.0",
-    "typescript": "^4.0.0"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2"
   },
   "main": "dist/src/{index.js,functions/*.js}"
 }

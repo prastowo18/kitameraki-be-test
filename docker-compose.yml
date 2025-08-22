@@ -1,0 +1,26 @@
+services:
+  cosmosdb:
+    image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:vnext-preview
+    platform: linux/amd64
+    container_name: cosmosdb-emulator
+    ports:
+      - '8081:8081' # gateway (HTTP)
+      - '1234:1234' # Data Explorer (HTTP)
+    environment:
+      - AZURE_COSMOS_EMULATOR_PARTITION_COUNT=3
+      - AZURE_COSMOS_EMULATOR_ENABLE_DATA_PERSISTENCE=true
+      - AZURE_COSMOS_EMULATOR_IP_ADDRESS_OVERRIDE=host.docker.internal
+    command: ['--protocol', 'https', '--explorer-protocol', 'https']
+    volumes:
+      - cosmos-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'https://localhost:1234/'] # explorer root
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 2m
+
+volumes:
+  cosmos-data:
+    driver: local

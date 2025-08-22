@@ -1,23 +1,73 @@
-import { CosmosClient } from "@azure/cosmos";
-import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
+import {
+  app,
+  HttpRequest,
+  HttpResponseInit,
+  InvocationContext,
+} from '@azure/functions';
+import { container } from '../cosmosClient';
 
-export async function DeleteTask(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
-    context.log(`Http function processed request for url "${request.url}"`);
+export async function DeleteTask(
+  request: HttpRequest,
+  context: InvocationContext
+): Promise<HttpResponseInit> {
+  context.log(`Http function processed request for url "${request.url}"`);
 
-    const taskId = request.query.get('id');
+  try {
+    const id = request.query.get('id');
     const organizationId = request.query.get('organizationId');
 
-    const client = new CosmosClient("this is a connection string");
-    await client.database("TaskApp")
-        .container("Tasks")
-        .item(taskId, organizationId)
-        .delete();
+    if (!id || !organizationId) {
+      return {
+        status: 400,
+        jsonBody: {
+          data: null,
+          message:
+            'Task ID parameter and organizationId query parameter are required',
+        },
+      };
+    }
 
-    return { status: 200 };
-};
+    const { resource: task } = await container.item(id, organizationId).read();
+
+    if (!task) {
+      return {
+        status: 404,
+        jsonBody: {
+          data: null,
+          message: 'Task not found',
+        },
+      };
+    }
+
+    await container.item(task.id, organizationId).delete();
+    return {
+      status: 200,
+      jsonBody: {
+        data: task,
+      },
+    };
+  } catch (error) {
+    context.log('Error in GetTasks:', error);
+
+    if (error.code === 404) {
+      return {
+        status: 404,
+        jsonBody: {
+          data: null,
+          message: 'Task not found',
+        },
+      };
+    }
+
+    return {
+      status: 500,
+      jsonBody: { data: null, message: 'Internal server error' },
+    };
+  }
+}
 
 app.http('DeleteTask', {
-    methods: ['DELETE'],
-    authLevel: 'anonymous',
-    handler: DeleteTask
+  methods: ['DELETE'],
+  authLevel: 'anonymous',
+  handler: DeleteTask,
 });
